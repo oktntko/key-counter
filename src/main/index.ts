@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, globalShortcut } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
@@ -59,6 +59,18 @@ app.whenReady().then(() => {
     // dock icon is clicked and there are no other windows open.
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
+
+  // Register a 'CommandOrControl+X' shortcut listener.
+  const ret = globalShortcut.register('CommandOrControl+X', () => {
+    console.log('CommandOrControl+X is pressed')
+  })
+
+  if (!ret) {
+    console.log('registration failed')
+  }
+
+  // Check whether a shortcut is registered.
+  console.log(globalShortcut.isRegistered('CommandOrControl+X'))
 })
 
 // Quit when all windows are closed, except on macOS. There, it's common
@@ -68,6 +80,12 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit()
   }
+
+  // Unregister a shortcut.
+  globalShortcut.unregister('CommandOrControl+X')
+
+  // Unregister all shortcuts.
+  globalShortcut.unregisterAll()
 })
 
 // In this file you can include the rest of your app"s specific main process
