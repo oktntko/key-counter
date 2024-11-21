@@ -1,11 +1,18 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { invoke } from "@tauri-apps/api/core";
+import { warn, debug, trace, info, error } from "@tauri-apps/plugin-log";
 
 const greetMsg = ref("");
 const name = ref("");
 
 async function greet() {
+  warn("warn");
+  debug("debug");
+  trace("Trace");
+  info("Info");
+  error("Error");
+
   // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
   greetMsg.value = await invoke("greet", { name: name.value });
 }
@@ -44,7 +51,6 @@ async function greet() {
 .logo.vue:hover {
   filter: drop-shadow(0 0 2em #249b73);
 }
-
 </style>
 <style>
 :root {
@@ -156,5 +162,4 @@ button {
     background-color: #0f0f0f69;
   }
 }
-
 </style>
