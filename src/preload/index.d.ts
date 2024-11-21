@@ -5,7 +5,7 @@ declare global {
     electron: ElectronAPI
     api: unknown
     electronAPI: {
-      onUpdateCounter: (callback: () => void) => void
+      onUpdateCounter: (callback: (key: string) => void) => void
     }
   }
 }

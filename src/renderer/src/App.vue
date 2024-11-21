@@ -4,9 +4,9 @@ import Versions from './components/Versions.vue'
 
 const ipcHandle = () => window.electron.ipcRenderer.send('ping')
 
-const counter = ref(0)
-window.electronAPI.onUpdateCounter(() => {
-  counter.value = counter.value + 1
+const counter = ref<string[]>([])
+window.electronAPI.onUpdateCounter((key: string) => {
+  counter.value.push(key)
 })
 </script>
 
@@ -18,7 +18,7 @@ window.electronAPI.onUpdateCounter(() => {
     <span class="vue">Vue</span>
     and
     <span class="ts">TypeScript</span>
-    CommandOrControl+X is pressed [{{ counter }}] times.
+    pressed [{{ counter }}].
   </div>
   <p class="tip">Please try pressing <code>F12</code> to open the devTool</p>
   <div class="actions">

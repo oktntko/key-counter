@@ -65,7 +65,19 @@ app.whenReady().then(() => {
   // Register a 'CommandOrControl+X' shortcut listener.
   const ret = globalShortcut.register('CommandOrControl+X', () => {
     console.log('CommandOrControl+X is pressed')
-    mainWindow.webContents.send('update-counter', 'CommandOrControl+X is pressed')
+    mainWindow.webContents.send('update-counter', 'CommandOrControl+X')
+  })
+  globalShortcut.register('CommandOrControl', () => {
+    console.log('CommandOrControl is pressed')
+    mainWindow.webContents.send('update-counter', 'CommandOrControl')
+  })
+  globalShortcut.register('X', () => {
+    console.log('X is pressed')
+    mainWindow.webContents.send('update-counter', 'X')
+  })
+  globalShortcut.register('Esc', () => {
+    console.log('X is pressed')
+    mainWindow.webContents.send('update-counter', 'Esc')
   })
 
   if (!ret) {
