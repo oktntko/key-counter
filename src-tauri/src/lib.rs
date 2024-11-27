@@ -1,4 +1,8 @@
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
+use chrono::{
+    prelude::{DateTime, Local},
+    Timelike,
+};
 use log::info;
 use rdev::{listen, Event, EventType};
 use sqlx::{migrate::MigrateDatabase, sqlite::SqlitePool};
@@ -22,58 +26,81 @@ pub async fn run() {
         )
         .plugin(tauri_plugin_shell::init())
         .setup(move |_| {
-            let emit_event = move || async {
-                let db = connect_db().await;
-                sqlx::query(
-                    "INSERT INTO counter (
-                      date
-                    , time
-                    , key
-                    , count
-                    ) VALUES (
-                      $1
-                    , $2
-                    , $3
-                    , 1
-                    ) ON CONFLICT(date, time, key) DO UPDATE SET
-                      count = count + 1;",
-                )
-                .bind("date")
-                .bind("time")
-                .bind("key")
-                .execute(&db)
-                .await
-                .unwrap();
-            };
+            let emit_event =
+                move |date: String, time: String, key_str: String| async {
+                    info!("emit_event begin");
+
+                    let db = connect_db().await;
+                    sqlx::query(
+                        "
+                        INSERT INTO counter (
+                              date
+                            , time
+                            , key
+                            , count
+                        ) VALUES (
+                              $1
+                            , $2
+                            , $3
+                            , 1
+                        ) ON CONFLICT(date, time, key) DO UPDATE SET
+                            count = count + 1
+                      ",
+                    )
+                    .bind(date)
+                    .bind(time)
+                    .bind(key_str)
+                    .execute(&db)
+                    .await
+                    .unwrap();
+
+                    info!("emit_event end");
+                };
 
             let callback = move |event: Event| {
+                let dt: DateTime<Local> = event.time.clone().into();
+                let date = dt.format("%Y-%m-%d").to_string();
+                let h: u32 = dt.hour();
+                // TODO: 1h, 3h, 6h, 12h, 24h で設定できるようにする
+                let fixed_hour = if h < 3 {
+                    0
+                } else if h < 6 {
+                    3
+                } else if h < 9 {
+                    6
+                } else if h < 12 {
+                    9
+                } else if h < 15 {
+                    12
+                } else if h < 18 {
+                    15
+                } else if h < 21 {
+                    18
+                } else {
+                    21
+                };
+                let time = format!("{:2}:00:00", fixed_hour).to_string();
                 match event.name {
-                    Some(string) => {
-                        info!("rdev callback Some: {}", string);
+                    Some(key_str) => {
+                        info!("Some: {} {} [{}]", date, time, key_str);
+                        tokio::spawn(emit_event(date, time, key_str));
                     }
                     None => {
-                        #[allow(unused_must_use)] // emit_event no await
                         match event.event_type {
-                            EventType::KeyPress(key) => {
-                                let key_str = format!("{:?}", key);
-                                info!("rdev callback KeyPress: {} {:?}", key_str, key);
-                                emit_event();
-                            }
                             EventType::KeyRelease(key) => {
                                 let key_str = format!("{:?}", key);
-                                info!("rdev callback KeyRelease: {} {:?}", key_str, key);
+                                // TODO: Ctrl や Shift などの 実際の文字が取得できないキーに対応する
+                                // key_code の方を入力するとか
+                                info!("KeyRelease: {} {} [{}]", date, time, key_str);
+                                tokio::spawn(emit_event(date, time, key_str));
                             }
-                            EventType::ButtonPress { .. } => {
-                                // Ignore ButtonPress event type マウスボタン
-                            }
-                            EventType::ButtonRelease { .. } => {
-                                // Ignore ButtonRelease event type マウスボタン
-                            }
-                            EventType::MouseMove { .. } => {
-                                // Ignore MouseMove event type
-                            }
-                            EventType::Wheel { .. } => {
-                                // Ignore Wheel event type
+                            _ => {
+                                // Ignore event
+                                // EventType::KeyPress 長押しするとイベントが発火し続けるため無視する
+                                // EventType::ButtonPress マウスボタン
+                                // EventType::ButtonRelease マウスボタン
+                                // EventType::MouseMove
+                                // EventType::Wheel
                             }
                         }
                     }
@@ -99,14 +126,14 @@ async fn create_db_if_not_exists() {
 
     let db = connect_db().await;
     sqlx::query(
-        "CREATE TABLE IF NOT EXISTS
-counter (
-    id      INT     PRIMARY KEY
-  , date    TEXT    NOT NULL
-  , time    TEXT    NOT NULL
-  , key     TEXT    NOT NULL
-  , count   INT     NOT NULL DEFAULT 0
-  , UNIQUE (date, time, key) ON CONFLICT REPLACE
+        "
+        CREATE TABLE IF NOT EXISTS counter (
+          id      INT     PRIMARY KEY
+        , date    TEXT    NOT NULL
+        , time    TEXT    NOT NULL
+        , key     TEXT    NOT NULL
+        , count   INT     NOT NULL DEFAULT 0
+        , UNIQUE (date, time, key) ON CONFLICT REPLACE
 )",
     )
     .execute(&db)
