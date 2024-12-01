@@ -8,5 +8,8 @@
   "editor.rulers": [100],
   "files.associations": {
     "*.css": "tailwindcss"
+  },
+  "[rust]": {
+    "editor.defaultFormatter": "rust-lang.rust-analyzer"
   }
 }

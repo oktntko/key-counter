@@ -26,13 +26,12 @@ pub async fn run() {
         )
         .plugin(tauri_plugin_shell::init())
         .setup(move |_| {
-            let emit_event =
-                move |date: String, time: String, key_str: String| async {
-                    info!("emit_event begin");
+            let emit_event = move |date: String, time: String, key_str: String| async {
+                info!("emit_event begin");
 
-                    let db = connect_db().await;
-                    sqlx::query(
-                        "
+                let db = connect_db().await;
+                sqlx::query(
+                    "
                         INSERT INTO counter (
                               date
                             , time
@@ -46,16 +45,16 @@ pub async fn run() {
                         ) ON CONFLICT(date, time, key) DO UPDATE SET
                             count = count + 1
                       ",
-                    )
-                    .bind(date)
-                    .bind(time)
-                    .bind(key_str)
-                    .execute(&db)
-                    .await
-                    .unwrap();
+                )
+                .bind(date)
+                .bind(time)
+                .bind(key_str)
+                .execute(&db)
+                .await
+                .unwrap();
 
-                    info!("emit_event end");
-                };
+                info!("emit_event end");
+            };
 
             let callback = move |event: Event| {
                 let dt: DateTime<Local> = event.time.clone().into();
@@ -115,6 +114,7 @@ pub async fn run() {
 
             Ok(())
         })
+        .invoke_handler(tauri::generate_handler![load_counter])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
@@ -134,7 +134,7 @@ async fn create_db_if_not_exists() {
         , key     TEXT    NOT NULL
         , count   INT     NOT NULL DEFAULT 0
         , UNIQUE (date, time, key) ON CONFLICT REPLACE
-)",
+        )",
     )
     .execute(&db)
     .await
@@ -143,4 +143,38 @@ async fn create_db_if_not_exists() {
 
 async fn connect_db() -> SqlitePool {
     return SqlitePool::connect(&DB_URL).await.unwrap();
+}
+
+#[derive(Debug, sqlx::FromRow, serde::Serialize, serde::Deserialize)]
+struct Counter {
+    date: String,
+    time: String,
+    key: String,
+    count: String,
+}
+
+#[tauri::command]
+async fn load_counter() -> Result<Vec<Counter>, String> {
+    let db = connect_db().await;
+    let counters = sqlx::query_as::<_, Counter>(
+        "
+        SELECT
+              date
+            , time
+            , key
+            , SUM(count) AS count
+        FROM
+            counter
+        GROUP BY
+              date
+            , time
+            , key
+        ",
+    )
+    .fetch_all(&db)
+    .await
+    .map_err(|e| format!("Failed to get counters {}", e))?;
+
+    info!("load_counter: {:?}", counters);
+    Ok(counters)
 }

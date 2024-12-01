@@ -1,5 +1,20 @@
+<script setup lang="ts">
+import { invoke } from '@tauri-apps/api/core';
+
+type Counter = {
+  date: string;
+  time: string;
+  key: string;
+  count: string;
+};
+async function load_counter(): Promise<Counter[]> {
+  return invoke('load_counter');
+}
+</script>
+
 <template>
   <div class="flex items-center justify-center gap-1 p-4">
+    <button @click="load_counter">load_counter</button>
     <div class="flex flex-col gap-1">
       <div class="flex flex-col">
         <div class="flex">
