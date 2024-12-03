@@ -4,7 +4,7 @@ use chrono::{
     Timelike,
 };
 use log::info;
-use rdev::{listen, Event, EventType};
+use rdev::{listen, Event, EventType, Key};
 use sqlx::{migrate::MigrateDatabase, sqlite::SqlitePool};
 
 const DB_URL: &str = "sqlite:key-counter.db";
@@ -81,8 +81,13 @@ pub async fn run() {
                 let time = format!("{:2}:00:00", fixed_hour).to_string();
                 match event.name {
                     Some(key_str) => {
-                        info!("Some: {} {} [{}]", date, time, key_str);
-                        tokio::spawn(emit_event(date, time, key_str));
+                        let trimed = key_str.trim().to_string();
+                        if !trimed.is_empty() {
+                            info!("Some: {} {} [{}]", date, time, trimed);
+                            // TODO: 文字コード US（ユニット区切り）までデータベースに登録してしまう
+                            // BS（後退）、ESC（エスケープ） を登録してしまう
+                            tokio::spawn(emit_event(date, time, key_str.to_lowercase()));
+                        }
                     }
                     None => {
                         match event.event_type {
@@ -90,8 +95,81 @@ pub async fn run() {
                                 let key_str = format!("{:?}", key);
                                 // TODO: Ctrl や Shift などの 実際の文字が取得できないキーに対応する
                                 // key_code の方を入力するとか
-                                info!("KeyRelease: {} {} [{}]", date, time, key_str);
-                                tokio::spawn(emit_event(date, time, key_str));
+                                match key {
+                                    Key::BackQuote
+                                    | Key::Num1
+                                    | Key::Num2
+                                    | Key::Num3
+                                    | Key::Num4
+                                    | Key::Num5
+                                    | Key::Num6
+                                    | Key::Num7
+                                    | Key::Num8
+                                    | Key::Num9
+                                    | Key::Num0
+                                    | Key::Minus
+                                    | Key::Equal
+                                    | Key::KeyQ
+                                    | Key::KeyW
+                                    | Key::KeyE
+                                    | Key::KeyR
+                                    | Key::KeyT
+                                    | Key::KeyY
+                                    | Key::KeyU
+                                    | Key::KeyI
+                                    | Key::KeyO
+                                    | Key::KeyP
+                                    | Key::LeftBracket
+                                    | Key::RightBracket
+                                    | Key::KeyA
+                                    | Key::KeyS
+                                    | Key::KeyD
+                                    | Key::KeyF
+                                    | Key::KeyG
+                                    | Key::KeyH
+                                    | Key::KeyJ
+                                    | Key::KeyK
+                                    | Key::KeyL
+                                    | Key::SemiColon
+                                    | Key::Quote
+                                    | Key::BackSlash
+                                    | Key::IntlBackslash
+                                    | Key::KeyZ
+                                    | Key::KeyX
+                                    | Key::KeyC
+                                    | Key::KeyV
+                                    | Key::KeyB
+                                    | Key::KeyN
+                                    | Key::KeyM
+                                    | Key::Comma
+                                    | Key::Dot
+                                    | Key::Slash
+                                    | Key::Insert
+                                    | Key::KpMinus
+                                    | Key::KpPlus
+                                    | Key::KpMultiply
+                                    | Key::KpDivide
+                                    | Key::Kp0
+                                    | Key::Kp1
+                                    | Key::Kp2
+                                    | Key::Kp3
+                                    | Key::Kp4
+                                    | Key::Kp5
+                                    | Key::Kp6
+                                    | Key::Kp7
+                                    | Key::Kp8
+                                    | Key::Kp9 => {
+                                        // Some で入力された文字を取っているので無視する
+                                    }
+                                    _ => {
+                                        info!("KeyRelease: {} {} [{}]", date, time, key_str);
+                                        tokio::spawn(emit_event(
+                                            date,
+                                            time,
+                                            key_str.to_lowercase(),
+                                        ));
+                                    }
+                                }
                             }
                             _ => {
                                 // Ignore event
