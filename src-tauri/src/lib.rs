@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 use chrono::{
     prelude::{DateTime, Local},
@@ -192,7 +194,7 @@ pub async fn run() {
 
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![load_counter])
+        .invoke_handler(tauri::generate_handler![load_key_heatmap, list_counter])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
@@ -223,16 +225,50 @@ async fn connect_db() -> SqlitePool {
     return SqlitePool::connect(&DB_URL).await.unwrap();
 }
 
+#[tauri::command]
+async fn load_key_heatmap() -> Result<HashMap<String, f64>, String> {
+    #[derive(Debug, sqlx::FromRow, serde::Serialize, serde::Deserialize)]
+    struct Row {
+        key: String,
+        count: i64,
+    }
+
+    let db = connect_db().await;
+    let rows = sqlx::query_as::<_, Row>(
+        "
+        SELECT
+              key
+            , SUM(count) AS count
+        FROM
+            counter
+        GROUP BY
+              key
+        ",
+    )
+    .fetch_all(&db)
+    .await
+    .map_err(|e| format!("Failed to get counters {}", e))?;
+
+    let sum: i64 = rows.iter().map(|x| x.count).sum();
+    let heatmap: HashMap<String, f64> = rows.into_iter().fold(HashMap::new(), |mut acc, cur| {
+        acc.insert(cur.key, cur.count as f64 / sum as f64);
+        acc
+    });
+
+    info!("load_key_heatmap: {:?} {}", heatmap, sum);
+    Ok(heatmap)
+}
+
 #[derive(Debug, sqlx::FromRow, serde::Serialize, serde::Deserialize)]
 struct Counter {
     date: String,
     time: String,
     key: String,
-    count: String,
+    count: i64,
 }
 
 #[tauri::command]
-async fn load_counter() -> Result<Vec<Counter>, String> {
+async fn list_counter() -> Result<Vec<Counter>, String> {
     let db = connect_db().await;
     let counters = sqlx::query_as::<_, Counter>(
         "
@@ -244,7 +280,7 @@ async fn load_counter() -> Result<Vec<Counter>, String> {
         FROM
             counter
         GROUP BY
-              date
+              key
             , time
             , key
         ",
