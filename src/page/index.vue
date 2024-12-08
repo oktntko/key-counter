@@ -1,234 +1,323 @@
 <script setup lang="ts">
+import * as r from 'remeda';
 import { Tauri, type Heatmap } from '~/middleware/tauri';
+import Key from './component/Key.vue';
+
+const modelValue = ref<{
+  span: 'total' | 'month' | 'week' | 'today';
+  type: ('alpha' | 'num' | 'mod' | 'symbol')[];
+}>({
+  span: 'total',
+  type: ['alpha', 'num', 'mod', 'symbol'],
+});
 
 const heatmap = ref<Heatmap>({});
 onMounted(async () => {
   heatmap.value = await Tauri.load_key_heatmap();
 });
 const doubleQuoteSingleQuote = ['"', "'"];
+function p(props: { size?: number; codes?: string[] }) {
+  return {
+    size: props.size,
+    codes: props.codes,
+    intensity: r.sum(props.codes?.map((x) => heatmap.value[x] ?? 0) ?? [0]),
+  };
+}
 </script>
 
 <template>
-  <div class="flex items-center justify-center gap-1 p-4">
-    <div class="flex flex-col gap-1">
-      <div class="flex flex-col">
-        <div class="flex">
-          <!-- R4 -->
-          <Key :codes="['esc']" class="rainbow mr-12" :heatmap="heatmap"> </Key>
-          <Key :codes="['F1']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="['F2']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="['F3']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="['F4']" class="rainbow mr-6" :heatmap="heatmap"> </Key>
-          <Key :codes="['F5']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="['F6']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="['F7']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="['F8']" class="rainbow mr-6" :heatmap="heatmap"> </Key>
-          <Key :codes="['F9']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="['F10']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="['F11']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="['F12']" class="rainbow" :heatmap="heatmap"> </Key>
-        </div>
+  <div class="container mx-auto flex max-w-[1072px] flex-col gap-8 py-8 text-center">
+    <!-- form -->
+    <div class="flex flex-col gap-2">
+      <div class="flex items-start gap-2">
+        <label
+          v-for="span of ['total', 'month', 'week', 'today']"
+          :key="span"
+          class="inline-flex items-center text-sm font-medium capitalize text-gray-900"
+        >
+          <input v-model="modelValue.span" type="radio" :value="span" class="mr-1 h-4 w-4" />
+          {{ span }}
+        </label>
       </div>
-      <div class="flex flex-col">
-        <div class="flex">
-          <!-- R3 -->
-          <Key :codes="['~', '`']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="['!', '1']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="['@', '2']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="['#', '3']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="['$', '4']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="['%', '5']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="['^', '6']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="['&', '7']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="['*', '8']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="['(', '9']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="[')', '0']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="['_', '-']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="['+', '=']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="['backspace']" :size="2" class="rainbow" :heatmap="heatmap"> bksp </Key>
-        </div>
-        <div class="flex">
-          <!-- R2 -->
-          <Key :codes="['tab']" :size="1.5" class="rainbow" :heatmap="heatmap"> tab </Key>
-          <Key :codes="['q']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="['w']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="['e']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="['r']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="['t']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="['y']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="['u']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="['i']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="['o']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="['p']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="['{', '[']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="['}', ']']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="['|', '\\']" :size="1.5" class="rainbow" :heatmap="heatmap"> </Key>
-        </div>
-        <div class="flex">
-          <!-- R2 -->
-          <Key :codes="['capslock']" :size="1.75" class="rainbow" :heatmap="heatmap">
-            <span> caps </span> <span> lock </span>
-          </Key>
-          <Key :codes="['a']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="['s']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="['d']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="['f']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="['g']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="['h']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="['j']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="['k']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="['l']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="[':', ';']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="doubleQuoteSingleQuote" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="['return']" :size="2.25" class="rainbow" :heatmap="heatmap"> </Key>
-        </div>
-        <div class="flex">
-          <!-- R1 -->
-          <Key :codes="['shiftleft']" :size="2.25" class="rainbow !flex-row" :heatmap="heatmap">
-            <span> l </span> <span> shift </span>
-          </Key>
-          <Key :codes="['z']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="['x']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="['c']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="['v']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="['b']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="['n']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="['m']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="['<', ',']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="['>', '.']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="['?', '/']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="['shiftright']" :size="2.75" class="rainbow !flex-row" :heatmap="heatmap">
-            <span> r </span> <span> shift </span>
-          </Key>
-        </div>
-        <div class="flex">
-          <!-- R1 -->
-          <Key :codes="['controlleft']" :size="1.25" class="rainbow !flex-row" :heatmap="heatmap">
-            <span> l </span> <span> ctrl </span>
-          </Key>
-          <Key :codes="['metaleft']" :size="1.25" class="rainbow !flex-row" :heatmap="heatmap">
-            <span> l </span> <span> gui </span>
-          </Key>
-          <Key :codes="['alt']" :size="1.25" class="rainbow !flex-row" :heatmap="heatmap">
-            <span> l </span> <span> alt </span>
-          </Key>
-          <Key :codes="['space']" :size="6.25" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="['alt']" :size="1.25" class="rainbow !flex-row" :heatmap="heatmap">
-            <span> r </span> <span> alt </span>
-          </Key>
-          <Key :codes="['metaright']" :size="1.25" class="rainbow !flex-row" :heatmap="heatmap">
-            <span> r </span> <span> gui </span>
-          </Key>
-          <Key :codes="['unknown(93)']" :size="1.25" class="rainbow" :heatmap="heatmap">
-            <span> menu </span>
-          </Key>
-          <Key :codes="['controlright']" :size="1.25" class="rainbow !flex-row" :heatmap="heatmap">
-            <span> r </span> <span> ctrl </span>
-          </Key>
-        </div>
+      <div class="flex items-start gap-2">
+        <label
+          v-for="type of ['alpha', 'num', 'mod', 'symbol']"
+          :key="type"
+          class="inline-flex items-center text-sm font-medium capitalize text-gray-900"
+        >
+          <input v-model="modelValue.type" type="checkbox" :value="type" class="mr-1 h-4 w-4" />
+          {{ type }}
+        </label>
       </div>
     </div>
 
-    <div class="flex flex-col gap-1">
-      <div class="flex flex-col">
-        <div class="flex">
-          <!-- R4 -->
-          <Key :codes="['printscreen']" class="rainbow" :heatmap="heatmap">
-            <div>print</div>
-            <div>screen</div>
-          </Key>
-          <Key :codes="['scrolllock']" class="rainbow" :heatmap="heatmap">
-            <span> scroll </span> <span> lock </span>
-          </Key>
-          <Key :codes="['pause']" class="rainbow" :heatmap="heatmap"> <span> pause </span> </Key>
+    <!-- keyboard -->
+    <div class="flex flex-col gap-2">
+      <div>
+        <div class="inline-flex flex-wrap gap-1 rounded bg-gray-900 p-1">
+          <div class="flex flex-col gap-1">
+            <div class="flex flex-col">
+              <div class="flex">
+                <!-- R4 -->
+                <Key v-bind="p({ codes: ['esc'] })" class="mr-12"> </Key>
+                <Key v-bind="p({ codes: ['F1'] })" class=""> </Key>
+                <Key v-bind="p({ codes: ['F2'] })" class=""> </Key>
+                <Key v-bind="p({ codes: ['F3'] })" class=""> </Key>
+                <Key v-bind="p({ codes: ['F4'] })" class="mr-6"> </Key>
+                <Key v-bind="p({ codes: ['F5'] })" class=""> </Key>
+                <Key v-bind="p({ codes: ['F6'] })" class=""> </Key>
+                <Key v-bind="p({ codes: ['F7'] })" class=""> </Key>
+                <Key v-bind="p({ codes: ['F8'] })" class="mr-6"> </Key>
+                <Key v-bind="p({ codes: ['F9'] })" class=""> </Key>
+                <Key v-bind="p({ codes: ['F10'] })" class=""> </Key>
+                <Key v-bind="p({ codes: ['F11'] })" class=""> </Key>
+                <Key v-bind="p({ codes: ['F12'] })" class=""> </Key>
+              </div>
+            </div>
+            <div class="flex flex-col">
+              <div class="flex">
+                <!-- R3 -->
+                <Key v-bind="p({ codes: ['~', '`'] })" class=""> </Key>
+                <Key v-bind="p({ codes: ['!', '1'] })" class=""> </Key>
+                <Key v-bind="p({ codes: ['@', '2'] })" class=""> </Key>
+                <Key v-bind="p({ codes: ['#', '3'] })" class=""> </Key>
+                <Key v-bind="p({ codes: ['$', '4'] })" class=""> </Key>
+                <Key v-bind="p({ codes: ['%', '5'] })" class=""> </Key>
+                <Key v-bind="p({ codes: ['^', '6'] })" class=""> </Key>
+                <Key v-bind="p({ codes: ['&', '7'] })" class=""> </Key>
+                <Key v-bind="p({ codes: ['*', '8'] })" class=""> </Key>
+                <Key v-bind="p({ codes: ['(', '9'] })" class=""> </Key>
+                <Key v-bind="p({ codes: [')', '0'] })" class=""> </Key>
+                <Key v-bind="p({ codes: ['_', '-'] })" class=""> </Key>
+                <Key v-bind="p({ codes: ['+', '='] })" class=""> </Key>
+                <Key v-bind="p({ codes: ['backspace'], size: 2 })" class=""> bksp </Key>
+              </div>
+              <div class="flex">
+                <!-- R2 -->
+                <Key v-bind="p({ codes: ['tab'], size: 1.5 })" class=""> tab </Key>
+                <Key v-bind="p({ codes: ['q'] })" class=""> </Key>
+                <Key v-bind="p({ codes: ['w'] })" class=""> </Key>
+                <Key v-bind="p({ codes: ['e'] })" class=""> </Key>
+                <Key v-bind="p({ codes: ['r'] })" class=""> </Key>
+                <Key v-bind="p({ codes: ['t'] })" class=""> </Key>
+                <Key v-bind="p({ codes: ['y'] })" class=""> </Key>
+                <Key v-bind="p({ codes: ['u'] })" class=""> </Key>
+                <Key v-bind="p({ codes: ['i'] })" class=""> </Key>
+                <Key v-bind="p({ codes: ['o'] })" class=""> </Key>
+                <Key v-bind="p({ codes: ['p'] })" class=""> </Key>
+                <Key v-bind="p({ codes: ['{', '['] })" class=""> </Key>
+                <Key v-bind="p({ codes: ['}', ']'] })" class=""> </Key>
+                <Key v-bind="p({ codes: ['|', '\\'], size: 1.5 })" class=""> </Key>
+              </div>
+              <div class="flex">
+                <!-- R2 -->
+                <Key v-bind="p({ codes: ['capslock'], size: 1.75 })" class="">
+                  <span> caps </span> <span> lock </span>
+                </Key>
+                <Key v-bind="p({ codes: ['a'] })" class=""> </Key>
+                <Key v-bind="p({ codes: ['s'] })" class=""> </Key>
+                <Key v-bind="p({ codes: ['d'] })" class=""> </Key>
+                <Key v-bind="p({ codes: ['f'] })" class=""> </Key>
+                <Key v-bind="p({ codes: ['g'] })" class=""> </Key>
+                <Key v-bind="p({ codes: ['h'] })" class=""> </Key>
+                <Key v-bind="p({ codes: ['j'] })" class=""> </Key>
+                <Key v-bind="p({ codes: ['k'] })" class=""> </Key>
+                <Key v-bind="p({ codes: ['l'] })" class=""> </Key>
+                <Key v-bind="p({ codes: [':', ';'] })" class=""> </Key>
+                <Key v-bind="p({ codes: doubleQuoteSingleQuote })" class=""> </Key>
+                <Key v-bind="p({ codes: ['return'], size: 2.25 })" class=""> </Key>
+              </div>
+              <div class="flex">
+                <!-- R1 -->
+                <Key v-bind="p({ codes: ['shiftleft'], size: 2.25 })" class="!flex-row">
+                  <span> l </span> <span> shift </span>
+                </Key>
+                <Key v-bind="p({ codes: ['z'] })" class=""> </Key>
+                <Key v-bind="p({ codes: ['x'] })" class=""> </Key>
+                <Key v-bind="p({ codes: ['c'] })" class=""> </Key>
+                <Key v-bind="p({ codes: ['v'] })" class=""> </Key>
+                <Key v-bind="p({ codes: ['b'] })" class=""> </Key>
+                <Key v-bind="p({ codes: ['n'] })" class=""> </Key>
+                <Key v-bind="p({ codes: ['m'] })" class=""> </Key>
+                <Key v-bind="p({ codes: ['<', ','] })" class=""> </Key>
+                <Key v-bind="p({ codes: ['>', '.'] })" class=""> </Key>
+                <Key v-bind="p({ codes: ['?', '/'] })" class=""> </Key>
+                <Key v-bind="p({ codes: ['shiftright'], size: 2.75 })" class="!flex-row">
+                  <span> r </span> <span> shift </span>
+                </Key>
+              </div>
+              <div class="flex">
+                <!-- R1 -->
+                <Key v-bind="p({ codes: ['controlleft'], size: 1.25 })" class="!flex-row">
+                  <span> l </span> <span> ctrl </span>
+                </Key>
+                <Key v-bind="p({ codes: ['metaleft'], size: 1.25 })" class="!flex-row">
+                  <span> l </span> <span> gui </span>
+                </Key>
+                <Key v-bind="p({ codes: ['alt'], size: 1.25 })" class="!flex-row">
+                  <span> l </span> <span> alt </span>
+                </Key>
+                <Key v-bind="p({ codes: ['space'], size: 6.25 })" class=""> </Key>
+                <Key v-bind="p({ codes: ['alt'], size: 1.25 })" class="!flex-row">
+                  <span> r </span> <span> alt </span>
+                </Key>
+                <Key v-bind="p({ codes: ['metaright'], size: 1.25 })" class="!flex-row">
+                  <span> r </span> <span> gui </span>
+                </Key>
+                <Key v-bind="p({ codes: ['unknown(93)'], size: 1.25 })" class="">
+                  <span> menu </span>
+                </Key>
+                <Key v-bind="p({ codes: ['controlright'], size: 1.25 })" class="!flex-row">
+                  <span> r </span> <span> ctrl </span>
+                </Key>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-1">
+            <div class="flex flex-col">
+              <div class="flex">
+                <!-- R4 -->
+                <Key v-bind="p({ codes: ['printscreen'] })" class="">
+                  <div>print</div>
+                  <div>screen</div>
+                </Key>
+                <Key v-bind="p({ codes: ['scrolllock'] })" class="">
+                  <span> scroll </span> <span> lock </span>
+                </Key>
+                <Key v-bind="p({ codes: ['pause'] })" class=""> <span> pause </span> </Key>
+              </div>
+            </div>
+            <div class="flex flex-col">
+              <div class="flex">
+                <!-- R3 -->
+                <Key v-bind="p({ codes: ['insert'] })" class=""> </Key>
+                <Key v-bind="p({ codes: ['home'] })" class=""> </Key>
+                <Key v-bind="p({ codes: ['pageup'] })" class="">
+                  <span> page </span> <span> up </span>
+                </Key>
+              </div>
+              <div class="flex">
+                <!-- R2 -->
+                <Key v-bind="p({ codes: ['del'] })" class=""> </Key>
+                <Key v-bind="p({ codes: ['end'] })" class=""> </Key>
+                <Key v-bind="p({ codes: ['pagedown'] })" class="">
+                  <span> page </span> <span> down </span>
+                </Key>
+              </div>
+              <div class="flex">
+                <!-- R2 -->
+                <Key> </Key>
+                <Key> </Key>
+                <Key> </Key>
+              </div>
+              <div class="flex">
+                <!-- R1 -->
+                <Key> </Key>
+                <Key v-bind="p({ codes: ['up'] })" class=""> </Key>
+                <Key> </Key>
+              </div>
+              <div class="flex">
+                <!-- R1 -->
+                <Key v-bind="p({ codes: ['left'] })" class=""> </Key>
+                <Key v-bind="p({ codes: ['down'] })" class=""> </Key>
+                <Key v-bind="p({ codes: ['right'] })" class=""> </Key>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-1">
+            <div class="flex flex-col">
+              <div class="flex">
+                <!-- R4 -->
+                <Key> </Key>
+                <Key> </Key>
+                <Key> </Key>
+                <Key> </Key>
+              </div>
+            </div>
+            <div class="flex flex-col">
+              <div class="flex">
+                <!-- R3 -->
+                <Key v-bind="p({ codes: ['numlock'] })" class="">
+                  <span> num </span> <span> lock </span>
+                </Key>
+                <Key v-bind="p({ codes: ['/'] })" class=""> </Key>
+                <Key v-bind="p({ codes: ['*'] })" class=""> </Key>
+                <Key v-bind="p({ codes: [','] })" class=""> </Key>
+              </div>
+              <div class="flex">
+                <!-- R2 -->
+                <Key v-bind="p({ codes: ['7'] })" class=""> </Key>
+                <Key v-bind="p({ codes: ['8'] })" class=""> </Key>
+                <Key v-bind="p({ codes: ['9'] })" class=""> </Key>
+                <Key v-bind="p({ codes: ['+'] })" class=""> </Key>
+              </div>
+              <div class="flex">
+                <!-- R2 -->
+                <Key v-bind="p({ codes: ['4'] })" class=""> </Key>
+                <Key v-bind="p({ codes: ['5'] })" class=""> </Key>
+                <Key v-bind="p({ codes: ['6'] })" class=""> </Key>
+                <Key v-bind="p({ codes: [','] })" class=""> </Key>
+              </div>
+              <div class="flex">
+                <!-- R1 -->
+                <Key v-bind="p({ codes: ['1'] })" class=""> </Key>
+                <Key v-bind="p({ codes: ['2'] })" class=""> </Key>
+                <Key v-bind="p({ codes: ['3'] })" class=""> </Key>
+                <Key v-bind="p({ codes: ['='] })" class=""> </Key>
+              </div>
+              <div class="flex">
+                <!-- R1 -->
+                <Key v-bind="p({ codes: ['0'], size: 2 })" class=""> </Key>
+                <Key v-bind="p({ codes: ['.'] })" class=""> </Key>
+                <Key v-bind="p({ codes: ['enter'] })" class=""> </Key>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-      <div class="flex flex-col">
-        <div class="flex">
-          <!-- R3 -->
-          <Key :codes="['insert']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="['home']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="['pageup']" class="rainbow" :heatmap="heatmap">
-            <span> page </span> <span> up </span>
-          </Key>
-        </div>
-        <div class="flex">
-          <!-- R2 -->
-          <Key :codes="['del']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="['end']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="['pagedown']" class="rainbow" :heatmap="heatmap">
-            <span> page </span> <span> down </span>
-          </Key>
-        </div>
-        <div class="flex">
-          <!-- R2 -->
-          <Key> </Key>
-          <Key> </Key>
-          <Key> </Key>
-        </div>
-        <div class="flex">
-          <!-- R1 -->
-          <Key> </Key>
-          <Key :codes="['up']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key> </Key>
-        </div>
-        <div class="flex">
-          <!-- R1 -->
-          <Key :codes="['left']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="['down']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="['right']" class="rainbow" :heatmap="heatmap"> </Key>
-        </div>
+
+      <div class="flex gap-1">
+        <Key :codes="['']" :intensity="1" class=""> max </Key>
+        <Key :codes="['']" :intensity="0.5" class=""> half </Key>
+        <Key :codes="['']" :intensity="0.25" class=""> quarter </Key>
+        <Key :codes="['']" :intensity="0" class=""> zero </Key>
       </div>
     </div>
 
-    <div class="flex flex-col gap-1">
-      <div class="flex flex-col">
-        <div class="flex">
-          <!-- R4 -->
-          <Key> </Key>
-          <Key> </Key>
-          <Key> </Key>
-          <Key> </Key>
-        </div>
-      </div>
-      <div class="flex flex-col">
-        <div class="flex">
-          <!-- R3 -->
-          <Key :codes="['numlock']" class="rainbow" :heatmap="heatmap">
-            <span> num </span> <span> lock </span>
-          </Key>
-          <Key :codes="['/']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="['*']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="[',']" class="rainbow" :heatmap="heatmap"> </Key>
-        </div>
-        <div class="flex">
-          <!-- R2 -->
-          <Key :codes="['7']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="['8']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="['9']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="['+']" class="rainbow" :heatmap="heatmap"> </Key>
-        </div>
-        <div class="flex">
-          <!-- R2 -->
-          <Key :codes="['4']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="['5']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="['6']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="[',']" class="rainbow" :heatmap="heatmap"> </Key>
-        </div>
-        <div class="flex">
-          <!-- R1 -->
-          <Key :codes="['1']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="['2']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="['3']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="['=']" class="rainbow" :heatmap="heatmap"> </Key>
-        </div>
-        <div class="flex">
-          <!-- R1 -->
-          <Key :codes="['0']" :size="2" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="['.']" class="rainbow" :heatmap="heatmap"> </Key>
-          <Key :codes="['enter']" class="rainbow" :heatmap="heatmap"> </Key>
-        </div>
-      </div>
+    <!-- table -->
+    <div class="">
+      <table
+        class="h-full w-full overflow-x-auto rounded border border-gray-300 bg-gray-50 text-sm"
+      >
+        <thead class="text-gray-900">
+          <tr class="divide-x divide-gray-200">
+            <th scope="col" class="column capitalize">No</th>
+            <th scope="col" class="column capitalize">key</th>
+            <th scope="col" class="column capitalize">ratio</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200 bg-white text-gray-900">
+          <tr
+            v-for="([key, count], i) of Object.entries(heatmap)"
+            :key="key"
+            class="divide-x divide-gray-200"
+          >
+            <td class="max-w-48">{{ i + 1 }}</td>
+            <td class="max-w-48">
+              <div class="line-clamp-2 min-w-28 px-2 py-1" :title="key">
+                {{ key }}
+              </div>
+            </td>
+            <td class="max-w-48">
+              <div class="line-clamp-1 min-w-32 px-2 py-1">
+                {{ count }}
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </div>
 </template>

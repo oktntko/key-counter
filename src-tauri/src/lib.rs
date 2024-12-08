@@ -249,13 +249,13 @@ async fn load_key_heatmap() -> Result<HashMap<String, f64>, String> {
     .await
     .map_err(|e| format!("Failed to get counters {}", e))?;
 
-    let sum: i64 = rows.iter().map(|x| x.count).sum();
+    let max: i64 = rows.iter().map(|x| x.count).max().unwrap();
     let heatmap: HashMap<String, f64> = rows.into_iter().fold(HashMap::new(), |mut acc, cur| {
-        acc.insert(cur.key, cur.count as f64 / sum as f64);
+        acc.insert(cur.key, cur.count as f64 / max as f64);
         acc
     });
 
-    info!("load_key_heatmap: {:?} {}", heatmap, sum);
+    info!("load_key_heatmap: {:?} {}", heatmap, max);
     Ok(heatmap)
 }
 
