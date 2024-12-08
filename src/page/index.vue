@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { disable, enable, isEnabled } from '@tauri-apps/plugin-autostart';
 import * as r from 'remeda';
 import { Tauri, type Heatmap } from '~/middleware/tauri';
 import Key from './component/Key.vue';
@@ -12,8 +13,10 @@ const modelValue = ref<{
 });
 
 const heatmap = ref<Heatmap>({});
+const autostart = ref<boolean>(false);
 onMounted(async () => {
   heatmap.value = await Tauri.load_key_heatmap();
+  autostart.value = await isEnabled();
 });
 const doubleQuoteSingleQuote = ['"', "'"];
 function p(props: { size?: number; codes?: string[] }) {
@@ -28,27 +31,53 @@ function p(props: { size?: number; codes?: string[] }) {
 <template>
   <div class="container mx-auto flex max-w-[1072px] flex-col gap-8 py-8 text-center">
     <!-- form -->
-    <div class="flex flex-col gap-2">
-      <div class="flex items-start gap-2">
-        <label
-          v-for="span of ['total', 'month', 'week', 'today']"
-          :key="span"
-          class="inline-flex items-center text-sm font-medium capitalize text-gray-900"
-        >
-          <input v-model="modelValue.span" type="radio" :value="span" class="mr-1 h-4 w-4" />
-          {{ span }}
-        </label>
+    <div class="flex justify-between">
+      <div class="flex flex-col gap-2">
+        <div class="flex items-start gap-2">
+          <label
+            v-for="span of ['total', 'month', 'week', 'today']"
+            :key="span"
+            class="inline-flex items-center text-sm font-medium capitalize text-gray-900"
+          >
+            <input v-model="modelValue.span" type="radio" :value="span" class="mr-1 h-4 w-4" />
+            {{ span }}
+          </label>
+        </div>
+        <div class="flex items-start gap-2">
+          <label
+            v-for="type of ['alpha', 'num', 'mod', 'symbol']"
+            :key="type"
+            class="inline-flex items-center text-sm font-medium capitalize text-gray-900"
+          >
+            <input v-model="modelValue.type" type="checkbox" :value="type" class="mr-1 h-4 w-4" />
+            {{ type }}
+          </label>
+        </div>
       </div>
-      <div class="flex items-start gap-2">
-        <label
-          v-for="type of ['alpha', 'num', 'mod', 'symbol']"
-          :key="type"
-          class="inline-flex items-center text-sm font-medium capitalize text-gray-900"
-        >
-          <input v-model="modelValue.type" type="checkbox" :value="type" class="mr-1 h-4 w-4" />
-          {{ type }}
-        </label>
-      </div>
+
+      <label class="inline-flex cursor-pointer items-center">
+        <input
+          type="checkbox"
+          value=""
+          class="peer sr-only"
+          :checked="autostart"
+          @change="
+            async () => {
+              if (autostart) {
+                await disable();
+                autostart = false;
+              } else {
+                await enable();
+                autostart = true;
+              }
+            }
+          "
+        />
+        <div
+          class="peer relative h-6 w-11 rounded-full bg-slate-600 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-blue-600 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rtl:peer-checked:after:-translate-x-full"
+        ></div>
+        <span class="ms-3 text-sm font-medium capitalize text-gray-900">auto start</span>
+      </label>
     </div>
 
     <!-- keyboard -->
